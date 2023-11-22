@@ -18,8 +18,7 @@ mongoose.set("strictQuery", true); //warning
 
 mongoose
 	.connect(
-		"mongodb+srv://OrderDispatching:iti@cluster0.eesrbrh.mongodb.net/?retryWrites=true&w=majority"
-	)
+		"mongodb+srv://rawangamaal21:iti@cluster0.1kgu36l.mongodb.net/"	)
 	.then(() => {
 		console.log("DB connected");
 		server.listen(port, () => {
