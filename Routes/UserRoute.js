@@ -11,7 +11,7 @@ router.route("/users/register")
        .post( UserValidPOST ,validateMW, userController.register) 
 
 router.route("/users/PhoneVerify")
-       .patch(validateMW, userController.phoneVerify) 
+       .patch(authenticationMW.auth , userController.phoneVerify) 
 
 
 
