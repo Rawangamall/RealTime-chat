@@ -12,12 +12,12 @@ const salt = bcrypt.genSaltSync(saltRounds)
 
 exports.register = catchAsync(async (req,res,next)=>{
 
-    const hash = await bcrypt.hash(req.body.password, salt);
 
     const {firstName,lastName,image,phone} = req.body;
+console.log(req.body , "body")
+    const hash = await bcrypt.hash(req.body.password, salt);
 
     const user = new UserSchema({
-        _id: request.body._id,
         firstName: firstName,
         lastName: lastName,
         phoneNumber: phone,
@@ -25,6 +25,6 @@ exports.register = catchAsync(async (req,res,next)=>{
       });
   
       const data = await user.save();
-      response.status(201).json(data);
+      res.status(201).json(data);
 
 });

@@ -7,8 +7,8 @@ const authenticationMW = require("./../Middlewares/authenticationMW")
 const {addIMG , removeUserIMG}=require("./../Core/Validation/imageValidation");
 
 
-router.route("/users")
-       .post(authenticationMW.auth , UserValidPOST ,validateMW, userController.register) 
+router.route("/users/register")
+       .post( UserValidPOST ,validateMW, userController.register) 
 
 
 

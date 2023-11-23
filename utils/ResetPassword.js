@@ -2,43 +2,49 @@ const twilio = require('twilio');
 
 const accountSid =  process.env.AccountSID;
 const authToken = process.env.AccountToken;
-const client = twilio(accountSid, authToken);
+const verifySid = "VAee0117c465422c00f7ed46e32a6264fe";
+const client = require("twilio")(accountSid, authToken);
 
-// Function to send SMS with verification code
-const sendSMS = async function sendVerificationCode( msg ,phoneNumber) {
+
+// exports.sendCustomSMS = async function sendCustomMessage(message, phoneNumber) {   //not free 
+//     try {
+//         const sentMessage = await client.messages.create({
+//             body: message,
+//             from: "+20 102 288 7277", 
+//             to: "+201270997399"
+//         });
+//         console.log(`Message sent: ${sentMessage.sid}`);
+//         return true; // Return true for successful sending
+//     } catch (error) {
+//         console.error(`Error sending message: ${error}`);
+//         return false; // Return false for sending failure
+//     }
+// };
+
+exports.sendSMS = async function sendVerificationCode(phoneNumber) {
     try {
-        const message = await client.messages.create({
-            body: msg ,
-            from: twilioPhone,
-            to: phoneNumber
-        });
-        console.log(`Verification code sent: ${message.sid}`);
-        return true; // Return true to indicate successful sending
+        const verification = await client.verify.v2
+            .services(verifySid)
+            .verifications.create({ to: "+201022887277", channel: "sms" });
+        console.log(verification.status); 
+        return true;
     } catch (error) {
         console.error(`Error sending verification code: ${error}`);
-        return false; // Return false to indicate failure
+        return false; 
     }
-}
+};
 
-module.exports = sendSMS;
+// Function to handle user verification using Twilio
+exports.verifyUser = async function verifyUserOTP(phoneNumber, otpCode) {
+    try {
+        const verificationCheck = await client.verify.v2
+            .services(verifySid)
+            .verificationChecks.create({ to: phoneNumber, code: otpCode });
+       // console.log(verificationCheck.status); 
+        return verificationCheck.status === 'approved'; 
+    } catch (error) {
+        console.error(`Error verifying OTP: ${error}`);
+        return false; 
+    }
+};
 
-// const verifySid = "VAee0117c465422c00f7ed46e32a6264fe";
-// const client = require("twilio")(accountSid, authToken);
-
-// client.verify.v2
-//   .services(verifySid)
-//   .verifications.create({ to: "+201022887277", channel: "sms" })
-//   .then((verification) => console.log(verification.status))
-//   .then(() => {
-//     const readline = require("readline").createInterface({
-//       input: process.stdin,
-//       output: process.stdout,
-//     });
-//     readline.question("Please enter the OTP:", (otpCode) => {
-//       client.verify.v2
-//         .services(verifySid)
-//         .verificationChecks.create({ to: "+201022887277", code: otpCode })
-//         .then((verification_check) => console.log(verification_check.status))
-//         .then(() => readline.close());
-//     });
-//   });

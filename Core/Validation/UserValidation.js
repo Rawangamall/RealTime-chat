@@ -18,6 +18,12 @@ exports.UserValidPOST = [
   }),
   body("image").optional().isString().withMessage("image should string"),
   body("password").isString().withMessage("password should string"),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error('Confirm password does not match password');
+    }
+    return true;
+  })
 
 ];
 

@@ -13,7 +13,7 @@ const schema = new mongoose.Schema({
   phoneNumber: {type:String, unique:true , require:true},
   Status: {
     type: String,
-    enum : ['offline,online'] , 
+    enum: ['offline', 'online'], 
     default: "offline",
   },
   phone_verification: {
@@ -28,6 +28,7 @@ schema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
 ) {
+ 
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
