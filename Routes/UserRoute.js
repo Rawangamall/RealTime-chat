@@ -10,6 +10,9 @@ const {addIMG , removeUserIMG}=require("./../Core/Validation/imageValidation");
 router.route("/users/register")
        .post( UserValidPOST ,validateMW, userController.register) 
 
+router.route("/users/PhoneVerify")
+       .patch(validateMW, userController.phoneVerify) 
+
 
 
 

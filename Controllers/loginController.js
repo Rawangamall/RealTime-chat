@@ -1,7 +1,6 @@
 const mongoose=require("mongoose");
 const JWT= require("jsonwebtoken");
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
 
 require("./../Models/UserModel")
 const UserSchema=mongoose.model("user");

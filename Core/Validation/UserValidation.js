@@ -8,7 +8,7 @@ exports.UserValidPOST = [
   body("firstName").isString().withMessage("fisrt name should string"),
   body("lastName").isString().withMessage("last name should string"),
   body('phone').isString().withMessage('Should be a valid phone format').custom(async (value) => {
-    const user = await UserSchema.findOne({ phoneNumber: value });
+    const user = await UserSchema.findOne({ phoneNumber: "+2"+value });
 
     if (user) {
       throw new Error('phoneNumber is already exist');
