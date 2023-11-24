@@ -17,7 +17,6 @@ exports.register = catchAsync(async (req,res,next)=>{
 
     const {firstName,lastName,image} = req.body;
     const phone = "+2" + req.body.phone
-console.log(req.body , "body")
     const hash = await bcrypt.hash(req.body.password, salt);
 
     const user = new UserSchema({

@@ -7,6 +7,7 @@ const path=require("path");
 
 const UserRoute = require("./Routes/UserRoute");
 const loginRoute = require("./Routes/loginRoute");
+const chatRoute = require("./Routes/chatRoute");
 
 const { io, server, app } = require("./utils/socket");
 //server
@@ -43,6 +44,7 @@ app.use('/images', express.static(path.join(__dirname, 'Core/images/User')));
 //Routes
 app.use(loginRoute);
 app.use(UserRoute);
+app.use(chatRoute);
 
 
 //Not Found Middleware

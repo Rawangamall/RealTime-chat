@@ -1,0 +1,22 @@
+// Import necessary functions to be tested
+const { sendMessage, getConversation, receiveMessage } = require('../your-messaging-functions');
+
+test('Sending a message updates conversation and emits to recipient', async () => {
+  // Mock user IDs for sender and receiver
+  const senderId = 1;
+  const receiverId = 2;
+
+  // Simulate sending a message
+  const sentMessage = await sendMessage(senderId, receiverId, 'Hello, how are you?');
+
+  // Check if message is successfully sent and saved in the database
+  expect(sentMessage).toBeDefined();
+
+  // Ensure conversation is updated with the new message
+  const conversation = await getConversation(senderId, receiverId);
+  expect(conversation.messages).toContain(sentMessage.id);
+
+  // Check if the message is emitted to the recipient
+  const receivedMessage = await receiveMessage(receiverId);
+  expect(receivedMessage).toEqual(sentMessage);
+});
