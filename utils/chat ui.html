@@ -1,22 +1,14 @@
-// Import necessary functions to be tested
-const { sendMessage, getConversation, receiveMessage } = require('../your-messaging-functions');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Real-Time Chat</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+  <script src="chat ui.js" type="module"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-test('Sending a message updates conversation and emits to recipient', async () => {
-  // Mock user IDs for sender and receiver
-  const senderId = 1;
-  const receiverId = 2;
-
-  // Simulate sending a message
-  const sentMessage = await sendMessage(senderId, receiverId, 'Hello, how are you?');
-
-  // Check if message is successfully sent and saved in the database
-  expect(sentMessage).toBeDefined();
-
-  // Ensure conversation is updated with the new message
-  const conversation = await getConversation(senderId, receiverId);
-  expect(conversation.messages).toContain(sentMessage.id);
-
-  // Check if the message is emitted to the recipient
-  const receivedMessage = await receiveMessage(receiverId);
-  expect(receivedMessage).toEqual(sentMessage);
-});
+</head>
+<body>
+</body>
+</html>

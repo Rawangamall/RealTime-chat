@@ -30,11 +30,8 @@ mongoose
 		console.log("Db Problem " + error);
 	});
 
-app.use(
-	cors({
-		origin: "*",
-	})
-);
+	app.use(cors());
+
 //body parse
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

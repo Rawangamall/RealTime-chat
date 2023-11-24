@@ -8,4 +8,7 @@ const authenticationMW = require("./../Middlewares/authenticationMW")
 router.route("/Conversation")
        .post( authenticationMW.auth ,validateMW, chatController.createConversation) 
 
+router.route("/Conversation/:id")
+       .get(authenticationMW.auth ,chatController.getConversationsForUser)
+
 module.exports=router;
