@@ -25,11 +25,14 @@ const chatMessages = document.getElementById('messages');
 
 // Connect to the Socket.IO server
 const socket = io('http://localhost:8080');
+
 const limit = 6;
 const conversationId = "6560146ffd9ffe0032d03fb0"
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNzAwODYzODg4LCJleHAiOjE3MDE0Njg2ODh9.AvHxX1rKjE5ZoQYx-13SxnIqbbHlxns6MiWsq_ulAYc"
 const loggedInUserId = 8;
 let offset = 1;
+let totalMessageCount = 0;
+
 
 function sendMessage() {
   const messageInput = document.getElementById('messageInput');
@@ -52,9 +55,10 @@ socket.on('newMessage', async (message) => {
     }
   });
 
-  const senderName = response.data.firstName || 'Unknown'; // Fallback if firstName is undefined
+  const senderName = response.data.firstName || 'Unknown'; 
   message.senderName = senderName;
-  renderMessages([message], chatMessages, 1, loggedInUserId);
+  renderMessages([message], chatMessages, loggedInUserId,false);
+  totalMessageCount++;
 
 });
 
@@ -62,6 +66,7 @@ socket.on('newMessage', async (message) => {
 socket.on('connect', () => {
   socket.emit('joinRoom', conversationId);
 });
+
 // Fetch and render initial latest messages
 fetchLatestMessages(conversationId, limit, token)
   .then(messages => {
@@ -74,9 +79,9 @@ messagesDiv.addEventListener('scroll', async () => {
     console.log('Scrolled up');
     const olderMessages = await fetchPreviousMessages(conversationId, limit, token, offset);
     if (olderMessages.length > 0) {
-      renderMessages(olderMessages, chatMessages, loggedInUserId, true); // Append older messages
-      offset++;
-    }
+      renderMessages(olderMessages, chatMessages, loggedInUserId, true); 
+         offset++ ;
+        }
   }
 });
 
@@ -88,7 +93,7 @@ async function fetchLatestMessages(conversationId, limit, token) {
       }
     });
     const latestMessages = response.data[0].messages;
-    return latestMessages;
+    return latestMessages.reverse();
   } catch (error) {
     console.log('Error fetching latest messages:', error);
     return [];
@@ -97,11 +102,15 @@ async function fetchLatestMessages(conversationId, limit, token) {
 
 async function fetchPreviousMessages(conversationId, limit, token,currentOffset) {
   try {
-    const response = await axios.get(`http://localhost:8080/Conversation/${conversationId}?offset=${currentOffset}&limit=${limit}`, {
+
+     const response = await axios.get(`http://localhost:8080/Conversation/${conversationId}?offset=${currentOffset}&limit=${limit}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
+  
+    console.log(limit,"limit ")
+
     const previousMessages = response.data[0].messages;
     return previousMessages;
   } catch (error) {
@@ -111,16 +120,20 @@ async function fetchPreviousMessages(conversationId, limit, token,currentOffset)
 }
 
 function renderMessages(messages, chatMessages, loggedInUserId, prepend = false) {
-  messages.reverse().forEach(message => {
+  messages.forEach(message => {
     const messageDiv = document.createElement('div');
     const senderName = message.sender.firstName || message.senderName; 
     const content = message.content || 'No content';
     messageDiv.textContent = `${senderName}: ${content}`;
 
-    if (prepend) {
-      chatMessages.insertBefore(messageDiv, chatMessages.firstChild); // Prepend older messages
+    if (!prepend) {
+      console.log('Appending new message:', message);
+
+      chatMessages.appendChild(messageDiv); 
     } else {
-      chatMessages.appendChild(messageDiv); // Append latest messages
+      console.log('insert new message:', message , prepend);
+
+      chatMessages.insertBefore(messageDiv, chatMessages.firstChild); 
     }
   });
 }
