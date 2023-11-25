@@ -115,7 +115,13 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
     });
 
   exports.getAllMyRooms = catchAsync (async(req,res,next)=>{
-      const chats = await Conversation.find({ participants: { $in: [decoded.id] }}).select("_id chatName");
+    token = req.headers.authorization.split(' ')[1];
+    if(!token){
+    return next(new AppError('You\'re not logged in, please go to login page',401));
+    }
+    const decoded = await promisify(JWT.verify)(token,process.env.JWT_SECRET);
+
+    const chats = await Conversation.find({ participants: { $in: [decoded.id] }}).select("_id chatName");
       res.status(200).json(chats)
     
       });
