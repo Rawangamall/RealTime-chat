@@ -10,7 +10,10 @@ const {addIMG , removeUserIMG}=require("./../Core/Validation/imageValidation");
 router.route("/users/register")
        .post( UserValidPOST ,validateMW, userController.register) 
 
-router.route("/users/PhoneVerify")
+ router.route("/user/PhoneVerify")
+       .get(authenticationMW.auth , userController.SendVerifactionCode) 
+
+router.route("/user/CodeVerify")
        .patch(authenticationMW.auth , userController.phoneVerify) 
 
 router.route("/user/name/:id")

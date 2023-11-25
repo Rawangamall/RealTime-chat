@@ -39,6 +39,29 @@ exports.register = catchAsync(async (req,res,next)=>{
 
 });
 
+exports.SendVerifactionCode =  catchAsync(async (req,res,next)=>{
+    token = req.headers.authorization.split(' ')[1];
+    if(!token){
+    return next(new AppError('You\'re not logged in, please go to login page',401));
+    }
+    const decoded = await promisify(JWT.verify)(token,process.env.JWT_SECRET);
+
+    //verify if the user of that token still exist
+    const user = await UserSchema.findById(decoded.id);
+    if(!user){
+    return next(new AppError("The user of that token no longer exist"),401)
+    }
+
+    const isSMSSent = await TwilioService.sendSMS(user.phoneNumber);
+
+    if (!isSMSSent){
+        return next(new AppError("Error sending SMS. Please try again later!", 500));
+    }
+
+    return res.status(200).json({ message: "Success: SMS sent for Verifaction" });
+
+})
+
 exports.phoneVerify =  catchAsync(async (req,res,next)=>{
     
     const otp = req.body.code
