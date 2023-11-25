@@ -64,15 +64,16 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
   
   exports.getConversationsForUser = catchAsync(async (req,res,next)=>{
     const converID = req.params.id
-    const offset = parseInt(req.query.offset) || 0; // Extract offset from query parameter (default to 0)
+    const offset = parseInt(req.query.offset) || 1; 
     const limit = parseInt(req.query.limit) || 2;
+    console.log(limit,"limit",limit * offset)
     const conversations = await Conversation.find({ _id: converID })
     .populate({
       path: 'messages',
       options: {
         sort: { createdAt: -1 },
-        skip: offset * limit, // Skip previously loaded messages based on pagination
-        limit: limit  // Load the next set and additional latest 2 messages
+        skip: offset * limit,
+        limit: limit // Load the next set and additional latest set
       },
       select: 'content sender',
       populate: {
@@ -81,7 +82,7 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
       }
     })
     .exec();
-
+console.log(conversations[0])
     res.status(200).json(conversations)
   });
   

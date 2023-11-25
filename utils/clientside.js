@@ -25,10 +25,11 @@ const chatMessages = document.getElementById('messages');
 
 // Connect to the Socket.IO server
 const socket = io('http://localhost:8080');
-const limit = 7;
+const limit = 6;
 const conversationId = "6560146ffd9ffe0032d03fb0"
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNzAwODYzODg4LCJleHAiOjE3MDE0Njg2ODh9.AvHxX1rKjE5ZoQYx-13SxnIqbbHlxns6MiWsq_ulAYc"
 const loggedInUserId = 8;
+let offset = 1;
 
 function sendMessage() {
   const messageInput = document.getElementById('messageInput');
@@ -61,67 +62,65 @@ socket.on('newMessage', async (message) => {
 socket.on('connect', () => {
   socket.emit('joinRoom', conversationId);
 });
+// Fetch and render initial latest messages
+fetchLatestMessages(conversationId, limit, token)
+  .then(messages => {
+    renderMessages(messages, chatMessages, loggedInUserId);
+  });
 
-// Fetch messages for the conversation
-async function fetchMessages(conversationId, limit, token) {
+// Handling scrolling for fetching older messages
+messagesDiv.addEventListener('scroll', async () => {
+  if (messagesDiv.scrollTop === 0) {
+    console.log('Scrolled up');
+    const olderMessages = await fetchPreviousMessages(conversationId, limit, token, offset);
+    if (olderMessages.length > 0) {
+      renderMessages(olderMessages, chatMessages, loggedInUserId, true); // Append older messages
+      offset++;
+    }
+  }
+});
+
+async function fetchLatestMessages(conversationId, limit, token) {
   try {
     const response = await axios.get(`http://localhost:8080/Conversation/${conversationId}?limit=${limit}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-    const messages = response.data[0].messages;
-    return messages;
+    const latestMessages = response.data[0].messages;
+    return latestMessages;
   } catch (error) {
-    console.log('Error fetching messages:', error);
+    console.log('Error fetching latest messages:', error);
     return [];
   }
 }
 
-function renderMessages(messages, chatMessages, limit, loggedInUserId) {
-  messages.slice(0, limit).reverse().forEach(message => {
-    console.log(message,"in render msg")
+async function fetchPreviousMessages(conversationId, limit, token,currentOffset) {
+  try {
+    const response = await axios.get(`http://localhost:8080/Conversation/${conversationId}?offset=${currentOffset}&limit=${limit}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const previousMessages = response.data[0].messages;
+    return previousMessages;
+  } catch (error) {
+    console.log('Error fetching previous messages:', error);
+    return [];
+  }
+}
+
+function renderMessages(messages, chatMessages, loggedInUserId, prepend = false) {
+  messages.reverse().forEach(message => {
     const messageDiv = document.createElement('div');
     const senderName = message.sender.firstName || message.senderName; 
     const content = message.content || 'No content';
     messageDiv.textContent = `${senderName}: ${content}`;
 
-    chatMessages.appendChild(messageDiv);
+    if (prepend) {
+      chatMessages.insertBefore(messageDiv, chatMessages.firstChild); // Prepend older messages
+    } else {
+      chatMessages.appendChild(messageDiv); // Append latest messages
+    }
   });
 }
-
-// Fetch and render initial messages
-fetchMessages(conversationId, limit, token)
-  .then(messages => {
-    renderMessages(messages, chatMessages, limit, loggedInUserId);
-  });
-
-// Handling scrolling for fetching older messages
-chatContainer.addEventListener('scroll', async () => {
-  if (chatContainer.scrollTop === 0) {
-    console.log("Scrolled up");
-    const additionalMessages = await fetchAdditionalMessages();
-    if (additionalMessages.length > 0) {
-      renderMessages(additionalMessages, chatMessages, limit, loggedInUserId);
-      chatContainer.scrollTop = additionalMessages.length * 50;
-    }
-  }
-});
-
-let offset = 0;
-
-async function fetchAdditionalMessages() {
-  try {
-    const response = await axios.get(`http://localhost:8080/Conversation/${conversationId}?offset=${offset}&limit=${limit}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    const additionalMessages = response.data[0].messages;
-    offset += limit;
-    return additionalMessages;
-  } catch (error) {
-    console.log('Error fetching additional messages:', error);
-    return [];
-  }
-};
