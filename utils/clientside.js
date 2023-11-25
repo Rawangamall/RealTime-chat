@@ -1,3 +1,4 @@
+//This page for just testing the realtime chat 
 // Create elements and structure for the chat interface
 const chatContainer = document.createElement('div');
 chatContainer.classList.add('chat-container');
@@ -35,15 +36,23 @@ function sendMessage() {
   socket.emit('sendMessage', {
     conversationId,
     sender: loggedInUserId,
-    receiver: 1, // Replace with the recipient's ID
+    receiver: 1, 
     content: messageContent
   });
-  messageInput.value = ''; // Clear input field after sending message
+  messageInput.value = ''; 
 }
 
 // Event listener for receiving new messages in the room
-socket.on('newMessage', (message) => {
-  console.log([message], "Received new message");
+socket.on('newMessage', async (message) => {
+
+  const response = await axios.get(`http://localhost:8080/user/name/${message.sender}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  const senderName = response.data.firstName || 'Unknown'; // Fallback if firstName is undefined
+  message.senderName = senderName;
   renderMessages([message], chatMessages, 1, loggedInUserId);
 
 });
@@ -69,18 +78,14 @@ async function fetchMessages(conversationId, limit, token) {
   }
 }
 
-// Function to render messages
 function renderMessages(messages, chatMessages, limit, loggedInUserId) {
   messages.slice(0, limit).reverse().forEach(message => {
     console.log(message,"in render msg")
     const messageDiv = document.createElement('div');
-    const senderName = message.sender.firstName || 'Me'; // Fallback if firstName is undefined
-    const content = message.content || 'No content'; // Fallback if content is undefined
-
+    const senderName = message.sender.firstName || message.senderName; 
+    const content = message.content || 'No content';
     messageDiv.textContent = `${senderName}: ${content}`;
-        if (message.sender._id === loggedInUserId) {
-      messageDiv.classList.add('sent-message');
-    }
+
     chatMessages.appendChild(messageDiv);
   });
 }

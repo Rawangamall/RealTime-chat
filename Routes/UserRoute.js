@@ -13,7 +13,8 @@ router.route("/users/register")
 router.route("/users/PhoneVerify")
        .patch(authenticationMW.auth , userController.phoneVerify) 
 
-
+router.route("/user/name/:id")
+       .get(authenticationMW.auth,userController.getUserName)
 
 
 

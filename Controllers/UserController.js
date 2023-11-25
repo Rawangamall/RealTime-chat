@@ -64,3 +64,16 @@ exports.phoneVerify =  catchAsync(async (req,res,next)=>{
     
     res.status(200).json({ message: "Success: Ur Phone Verified" });
 });
+
+exports.getUserName = catchAsync(async(req,res,next)=>{
+ const id = req.params.id
+
+ const user = await UserSchema.findById(id)
+
+ if(!user){
+    return next(new AppError("Not exist in the db"),400);
+ }
+
+ res.status(200).json({ firstName: user.firstName });
+
+})
