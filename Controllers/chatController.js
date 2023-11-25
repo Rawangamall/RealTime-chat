@@ -14,9 +14,11 @@ const catchAsync = require("./../utils/CatchAsync");
 
 exports.createConversation =  catchAsync(async (req,res,next)=>{
           const Phones = req.body.Phones
-          if (!Phones || Phones.length === 0) {
-            return res.status(400).json({ error: 'Phone numbers are required.' });
-          }
+          let isGroup = false
+
+      if (!Phones || Phones.length === 0) {
+        return res.status(400).json({ error: 'Phone numbers are required.' });
+      }
 
     const participants = await Promise.all(
     Phones.map(async (phoneNumber) => {
@@ -37,8 +39,14 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
     if (existingParticipants.length < 2) {
       return res.status(400).json({ error: 'At least two valid exist users are required.' });
     }
+    else if(existingParticipants.length > 2){
+      isGroup = true
+    }
 
-    const conversation = await Conversation.create({ participants: existingParticipants });
+    const conversation = await Conversation.create({ participants: existingParticipants ,
+      isGroup : isGroup ,
+      chatName : req.body.chatName });
+
     return res.status(201).json({ conversation });
 
   });
@@ -86,3 +94,49 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
     res.status(200).json(conversations)
   });
   
+  exports.getAllGPRooms = catchAsync (async(req,res,next)=>{
+  const chats = await Conversation.find({isGroup : true}).select("_id chatName");
+  res.status(200).json(chats)
+
+  });
+
+  exports.getAllPrivateRooms = catchAsync (async(req,res,next)=>{
+    token = req.headers.authorization.split(' ')[1];
+    if(!token){
+    return next(new AppError('You\'re not logged in, please go to login page',401));
+    }
+    const decoded = await promisify(JWT.verify)(token,process.env.JWT_SECRET);
+
+    const chats = await Conversation.find({ isGroup: false, participants: { $in: [decoded.id] } })
+    .select("_id chatName");
+  
+    res.status(200).json(chats)
+  
+    });
+
+  exports.getAllMyRooms = catchAsync (async(req,res,next)=>{
+      const chats = await Conversation.find({ participants: { $in: [decoded.id] }}).select("_id chatName");
+      res.status(200).json(chats)
+    
+      });
+
+exports.joinRoom = catchAsync (async(req,res,next)=>{
+    const conversationId = req.params.id
+        token = req.headers.authorization.split(' ')[1];
+        if(!token){
+        return next(new AppError('You\'re not logged in, please go to login page',401));
+        }
+        const decoded = await promisify(JWT.verify)(token,process.env.JWT_SECRET);
+
+        const chat = await Conversation.findOne({_id : conversationId}).select("participants");
+
+        if(chat.participants.includes(decoded.id)){
+          return next(new AppError('You\'re already exist in the room',401));
+        }
+
+        chat.participants.push(decoded.id)
+        await chat.save();
+
+        res.status(200).json({message:"You joined the room nw :)"})
+      
+        });
