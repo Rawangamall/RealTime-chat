@@ -1,6 +1,11 @@
 // server.js
-const socketIO = require("socket.io");
 const express = require("express");
+const JWT= require("jsonwebtoken");
+const { promisify } = require("util")
+const mongoose=require("mongoose");
+require("./../Models/UserModel")
+const UserSchema=mongoose.model("user");
+
 const chatController=require("./../Controllers/chatController");
 
 const app = express();
@@ -13,8 +18,16 @@ const io = require('socket.io')(server, {
 });
 
 // Socket.IO Connection Handling
-io.on('connection', (socket) => {
-  console.log('A user connected');
+io.on('connection', async (socket) => {
+   // console.log('A user connected');
+
+  const token = socket.handshake.headers.authorization.split(' ')[1];
+
+  if(!token){
+    return next(new AppError('You\'re not logged in, please go to login page',401));
+    }
+    const decoded = await promisify(JWT.verify)(token,process.env.JWT_SECRET);
+     await  UserSchema.findByIdAndUpdate(decoded.id, { Status: 'online' }, { new: true });
 
   socket.on('joinRoom', (conversationId) => {
     socket.join(conversationId);
@@ -35,8 +48,10 @@ io.on('connection', (socket) => {
   });
 
   // Handle disconnect
-  socket.on('disconnect', () => {
-    console.log('A user disconnected');
+  socket.on('disconnect', async () => {
+   // console.log('A user disconnected');
+     await  UserSchema.findByIdAndUpdate(decoded.id, { Status: 'offline' }, { new: true });
+
   });
 });
 

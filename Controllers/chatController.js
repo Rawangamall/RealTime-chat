@@ -53,6 +53,9 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
   
   exports.addMessageToConversation = async (conversationId, sender, receiver, content) => {
     try {
+
+      conversationId = parseInt(conversationId)
+      console.log(typeof(conversationId))
       const message = await Message.create({conversationId:conversationId ,
           sender : sender,
           receiver : receiver,
@@ -72,25 +75,29 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
   
   exports.getConversationsForUser = catchAsync(async (req,res,next)=>{
     const converID = req.params.id
-    const offset = parseInt(req.query.offset) || 0; 
     const limit = parseInt(req.query.limit) || 6;
+    const lastID = parseInt(req.query.lastID); 
+
+    // query condition
+    const messageMatch = lastID ? { _id: { $lt: lastID } } : {};
 
     const conversations = await Conversation.find({ _id: converID })
     .populate({
       path: 'messages',
+      match: messageMatch, 
       options: {
-        sort: { createdAt: -1 },
-        skip: offset * limit,
-        limit: limit
+        sort: { 'createdAt': -1 },
+        limit: limit,
       },
       select: 'content sender',
       populate: {
         path: 'sender receiver',
-        select: 'firstName' 
-      }
+        select: 'firstName',
+      },
     })
     .exec();
 
+   // console.log(conversations[0].messages,"conversati")
     res.status(200).json(conversations)
   });
   

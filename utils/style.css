@@ -30,3 +30,10 @@
     cursor: pointer;
   }
   
+  .notification {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+  }
