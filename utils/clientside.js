@@ -1,4 +1,8 @@
-//This page for just testing the realtime chat 
+//simple page to test the realtime chat only (bad notfication design but works)
+// Constants
+const API_URL = 'http://localhost:8080';
+const NOTIFICATION_DURATION = 3000;
+
 // Create elements and structure for the chat interface
 const chatContainer = document.createElement('div');
 chatContainer.classList.add('chat-container');
@@ -14,6 +18,7 @@ inputField.setAttribute('placeholder', 'Type a message...');
 
 const sendButton = document.createElement('button');
 sendButton.innerText = 'Send';
+sendButton.setAttribute('id', 'sendButton');
 sendButton.onclick = sendMessage;
 
 chatContainer.appendChild(messagesDiv);
@@ -22,14 +27,21 @@ chatContainer.appendChild(sendButton);
 document.body.appendChild(chatContainer);
 
 const chatMessages = document.getElementById('messages');
+const badge = document.getElementById('notification-count');
+const notificationContainer = document.createElement('div');
+notificationContainer.classList.add('notification-list');
+document.body.appendChild(notificationContainer);
+
+// Variables to track notifications and messages
+let newMessageCount = 0;
+const messageTitles = [];
 
 //static data to test only later dynamic in real clientside
 const limit = 6;
-const conversationId = 1
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNzAxMDA1MDI1LCJleHAiOjE3MDE2MDk4MjV9.h1vmIbsZMldW8dQOVN4jd9WmHYK3ct52AwwL7mcRI1s"
+const conversationId = 1;
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNzAxMDA1MDI1LCJleHAiOjE3MDE2MDk4MjV9.h1vmIbsZMldW8dQOVN4jd9WmHYK3ct52AwwL7mcRI1s";
 const loggedInUserId = 8;
 let LastMsgID = 1;
-let totalMessageCount = 0;
 
 // Connect to the Socket.IO server
 const socket = io('http://localhost:8080', {
@@ -37,7 +49,20 @@ const socket = io('http://localhost:8080', {
     Authorization: `Bearer ${token}`
   }
 });
-console.log('Socket connected:', socket.connected); // Check if the socket is connected
+
+
+// Event listeners and socket handling
+socket.on('connect', () => {
+  socket.emit('joinRoom', conversationId);
+});
+
+socket.on('newMessage', handleNewMessage);
+
+document.addEventListener('newMessageNotification', handleNewMessageNotification);
+badge.addEventListener('click', clearNotification);
+messagesDiv.addEventListener('scroll', handleScroll);
+
+// Functions
 
 function sendMessage() {
   const messageInput = document.getElementById('messageInput');
@@ -45,108 +70,132 @@ function sendMessage() {
   socket.emit('sendMessage', {
     conversationId,
     sender: loggedInUserId,
-    receiver: 1, 
     content: messageContent
   });
-  messageInput.value = ''; 
+  messageInput.value = '';
 }
 
-// Event listener for receiving new messages in the room
-socket.on('newMessage', async (message) => {
-  const response = await axios.get(`http://localhost:8080/user/name/${message.sender}`, {
+async function handleNewMessage(message) {
+  const response = await axios.get(`${API_URL}/user/name/${message.sender}`, {
     headers: {
       'Authorization': `Bearer ${token}`
     }
   });
 
-  const senderName = response.data.firstName || 'Unknown'; 
+  const senderName = response.data.firstName || 'Unknown';
   message.senderName = senderName;
-  renderMessages([message], chatMessages, loggedInUserId,false);
+  renderMessages([message], chatMessages, loggedInUserId, false);
 
-});
-
-
-// Join the user to the conversation room when connected
-socket.on('connect', () => {
-
-  socket.emit('joinRoom', conversationId);
-});
-
-// Fetch and render initial latest messages
-fetchLatestMessages(conversationId, limit, token)
-  .then(messages => {
-  
-    renderMessages(messages, chatMessages, loggedInUserId);
-  });
-
-// Handling scrolling for fetching older messages
-messagesDiv.addEventListener('scroll', async () => {
-  if (messagesDiv.scrollTop === 0) {
-    console.log('Scrolled up');
-
-    const olderMessages = await fetchPreviousMessages(conversationId, limit, token, LastMsgID);
-    if (olderMessages.length > 0) {
-
-      renderMessages(olderMessages, chatMessages, loggedInUserId, true);         
-      LastMsgID = olderMessages[olderMessages.length - 1]._id    // to fetch the earlist msg of that one
-
-        }
-  }
-});
-
-async function fetchLatestMessages(conversationId, limit, token) {
-  try {
-    const response = await axios.get(`http://localhost:8080/OneConversation/${conversationId}?limit=${limit}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    const latestMessages = response.data[0].messages;
-    console.log(latestMessages[latestMessages.length-1]._id,'lastMessageID');
-    LastMsgID = latestMessages[latestMessages.length-1]._id
-    return latestMessages.reverse();
-  } catch (error) {
-    console.log('Error fetching latest messages:', error);
-    return [];
+  if (message.sender !== loggedInUserId) {
+    updateNotificationAndTitles(senderName);
   }
 }
 
-async function fetchPreviousMessages(conversationId, limit, token,LastMsgID) {
-  try {
+function updateNotificationAndTitles(senderName) {
+  newMessageCount++;
+  messageTitles.push(`New message from ${senderName}`);
+  updateNotificationUI(newMessageCount);
+  showNotificationList();
+}
 
-     const response = await axios.get(`http://localhost:8080/OneConversation/${conversationId}?lastID=${LastMsgID}&limit=${limit}`, {
+function updateNotificationUI(count) {
+  badge.textContent = count;
+}
+
+function showNotificationList() {
+  notificationContainer.innerHTML = '';
+  messageTitles.forEach(title => {
+    const notificationItem = document.createElement('div');
+    notificationItem.textContent = title;
+    notificationContainer.appendChild(notificationItem);
+  });
+}
+
+function handleNewMessageNotification(event) {
+  const { title } = event.detail;
+  messageTitles.push(title);
+  showNotificationList();
+}
+
+function clearNotification() {
+  newMessageCount = 0;
+  messageTitles.length = 0;
+  updateNotificationUI(newMessageCount);
+  showNotificationList();
+}
+
+function handleScroll() {
+  // Handling scrolling for fetching older messages
+  if (messagesDiv.scrollTop === 0) {
+    console.log('Scrolled up');
+
+    fetchPreviousMessages(conversationId, limit, token, LastMsgID)
+      .then(olderMessages => {
+        if (olderMessages.length > 0) {
+          renderMessages(olderMessages, chatMessages, loggedInUserId, true);
+          LastMsgID = olderMessages[olderMessages.length - 1]._id;
+        }
+      })
+      .catch(error => {
+        console.log('Error fetching previous messages:', error);
+      });
+  }
+}
+
+async function fetchPreviousMessages(conversationId, limit, token, LastMsgID) {
+  try {
+    const response = await axios.get(`${API_URL}/OneConversation/${conversationId}?lastID=${LastMsgID}&limit=${limit}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-  
-    console.log(response.data[0].messages,"response.data[0].messages ")
 
-    const previousMessages = response.data[0].messages;
-    return previousMessages;
+    return response.data[0].messages;
   } catch (error) {
     console.log('Error fetching previous messages:', error);
     return [];
   }
 }
 
+
+  // Fetch and render initial latest messages
+  fetchLatestMessages(conversationId, limit, token)
+  .then(messages => {
+  
+    renderMessages(messages, chatMessages, loggedInUserId);
+  });
+
+async function fetchLatestMessages(conversationId, limit, token) {
+    try {
+      const response = await axios.get(`${API_URL}/OneConversation/${conversationId}?limit=${limit}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const latestMessages = response.data[0].messages;
+      console.log(latestMessages[latestMessages.length-1]._id,'lastMessageID');
+      LastMsgID = latestMessages[latestMessages.length-1]._id
+      return latestMessages.reverse();
+    } catch (error) {
+      console.log('Error fetching latest messages:', error);
+      return [];
+    }
+  }
+
 function renderMessages(messages, chatMessages, loggedInUserId, prepend = false) {
   messages.forEach(message => {
     const messageDiv = document.createElement('div');
-    const senderName = message.sender.firstName || message.senderName; 
+    const senderName = message.sender.firstName || message.senderName;
     const content = message.content || 'No content';
     messageDiv.textContent = `${senderName}: ${content}`;
 
     if (!prepend) {
       console.log('Appending new message:', message);
-
-      chatMessages.appendChild(messageDiv); 
+      chatMessages.appendChild(messageDiv);
     } else {
-      console.log('insert new message:', message , prepend);
-
-      chatMessages.insertBefore(messageDiv, chatMessages.firstChild); 
+      console.log('Insert new message:', message, prepend);
+      chatMessages.insertBefore(messageDiv, chatMessages.firstChild);
     }
   });
 }
-
 

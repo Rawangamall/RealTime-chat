@@ -51,14 +51,18 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
 
   });
   
-  exports.addMessageToConversation = async (conversationId, sender, receiver, content) => {
+  exports.addMessageToConversation = async (conversationId, sender, content) => {
     try {
 
       conversationId = parseInt(conversationId)
-      console.log(typeof(conversationId))
+      const Userparticipants = await Conversation.findById(conversationId).select("participants")
+
+      if(!(Userparticipants.participants.includes(sender))){
+        throw new Error('You\'re not participate in chat, Join first');
+      }
       const message = await Message.create({conversationId:conversationId ,
           sender : sender,
-          receiver : receiver,
+         // receiver : receiver,
           content : content });
           
       await Conversation.findByIdAndUpdate(
@@ -91,7 +95,7 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
       },
       select: 'content sender',
       populate: {
-        path: 'sender receiver',
+        path: 'sender',
         select: 'firstName',
       },
     })

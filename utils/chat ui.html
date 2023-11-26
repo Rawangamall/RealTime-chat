@@ -5,10 +5,21 @@
   <title>Real-Time Chat</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
-  <script src="clientside.js" type="module"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- Add Noty.js CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/noty-noty@0.0.6/dist/style.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/noty-noty@0.0.6/dist/index.min.js"></script>
+    <script src="clientside.js" type="module"></script>
+
 
 </head>
-<body>
+<body><div class="notification-wrapper">
+  <div class="notification-icon">
+    <i class="fas fa-bell"></i>
+    <span class="badge" id="notification-count"></span>
+  </div>
+</div>
+
+  
 </body>
 </html>

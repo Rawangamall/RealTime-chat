@@ -6,7 +6,7 @@ const MessageSchema = new Schema({
   _id:Number,
   conversationId: { type: Number, ref: 'Conversation' },
   sender: { type: Number, ref: 'user' },
-  receiver: { type: Number, ref: 'user' },
+  //receiver: { type: Number, ref: 'user' },
   content: String,
 },{timestamps:true});
 
