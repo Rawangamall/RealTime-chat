@@ -19,6 +19,8 @@ router.route("/user/CodeVerify")
 router.route("/user/name/:id")
        .get(authenticationMW.auth,userController.getUserName)
 
+ router.route("/user/changeStatus/:id")
+       .patch( userController.ChangeStatus) 
 
 
 module.exports=router;

@@ -100,3 +100,13 @@ exports.getUserName = catchAsync(async(req,res,next)=>{
  res.status(200).json({ firstName: user.firstName });
 
 })
+
+exports.ChangeStatus = catchAsync(async(req,res,next)=>{
+
+    const id = req.params.id;
+    const CurrentStatus = req.query.status;
+
+    const response = await  UserSchema.findByIdAndUpdate(id, { Status: CurrentStatus }, { new: true });
+    res.status(200).json(response);
+
+});

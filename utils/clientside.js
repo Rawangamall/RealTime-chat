@@ -26,7 +26,7 @@ const chatMessages = document.getElementById('messages');
 //static data to test only later dynamic in real clientside
 const limit = 6;
 const conversationId = 1
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNzAwODYzODg4LCJleHAiOjE3MDE0Njg2ODh9.AvHxX1rKjE5ZoQYx-13SxnIqbbHlxns6MiWsq_ulAYc"
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNzAxMDA1MDI1LCJleHAiOjE3MDE2MDk4MjV9.h1vmIbsZMldW8dQOVN4jd9WmHYK3ct52AwwL7mcRI1s"
 const loggedInUserId = 8;
 let LastMsgID = 1;
 let totalMessageCount = 0;
@@ -37,6 +37,7 @@ const socket = io('http://localhost:8080', {
     Authorization: `Bearer ${token}`
   }
 });
+console.log('Socket connected:', socket.connected); // Check if the socket is connected
 
 function sendMessage() {
   const messageInput = document.getElementById('messageInput');
@@ -52,23 +53,22 @@ function sendMessage() {
 
 // Event listener for receiving new messages in the room
 socket.on('newMessage', async (message) => {
-  console.log("in newMessage");
-  try {
-    const response = await axios.get(`http://localhost:8080/user/name/${message.sender}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    console.log('Response data:', response.data); // Log the response data for debugging
-    // Update UI with the received message data
-  } catch (error) {
-    console.error('Error fetching user name:', error);
-  }
+  const response = await axios.get(`http://localhost:8080/user/name/${message.sender}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  const senderName = response.data.firstName || 'Unknown'; 
+  message.senderName = senderName;
+  renderMessages([message], chatMessages, loggedInUserId,false);
+
 });
 
 
 // Join the user to the conversation room when connected
 socket.on('connect', () => {
+
   socket.emit('joinRoom', conversationId);
 });
 
@@ -150,16 +150,3 @@ function renderMessages(messages, chatMessages, loggedInUserId, prepend = false)
 }
 
 
-// Function to display a notification
-function displayNotification(message) {
-  const notificationContainer = document.querySelector('.notification-container');
-
-  // Create notification element
-  const notification = document.createElement('div');
-  notification.classList.add('notification');
-  notification.textContent = message;
-
-  // Add the notification to the container
-  notificationContainer.appendChild(notification);
-
-}
