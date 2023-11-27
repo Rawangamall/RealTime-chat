@@ -5,6 +5,7 @@ const validateMW=require("./../Core/Validation/validateMW");
 const authenticationMW = require("./../Middlewares/authenticationMW")
 const phoneVerifyMW = require("./../Middlewares/phoneVerifyMW")
 const {chatValidPOST}=require("./../Core/Validation/ChatValidation");
+const {uploadFile , validateFileUpload}=require("./../Core/Validation/FilesShare");
 
 
 router.route("/Conversation")
@@ -22,5 +23,10 @@ router.route("/AllPrivatesConversation")
 router.route("/AllMyConversation")
        .get(authenticationMW.auth,phoneVerifyMW.Verify,chatController.getAllMyRooms)    //user's chats
 
+router.route("/chat/uploadFile/:id")
+       .post(authenticationMW.auth,phoneVerifyMW.Verify,uploadFile,chatController.FileUpload)
 
+router.route("/chat/downloadFile/:fileName")
+       .get(authenticationMW.auth,phoneVerifyMW.Verify,chatController.FileDownload)
+ 
 module.exports=router;

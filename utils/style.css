@@ -5,9 +5,13 @@
     padding: 20px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    height: 50vh;
   }
   
   .messages {
+    flex: 1;
     height: 100px;
     overflow-y: scroll;
     border: 1px solid #eee;
@@ -34,7 +38,10 @@
     position: relative;
   }
   
- 
+ #file-container{
+
+  padding: 10px;
+}
   
   .badge {
     position: absolute;

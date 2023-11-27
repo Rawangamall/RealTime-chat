@@ -1,11 +1,16 @@
-//simple page to test the realtime chat only (bad notfication design but works)
+//simple page to test the realtime chat only 
 // Constants
 const API_URL = 'http://localhost:8080';
 const NOTIFICATION_DURATION = 3000;
 
 // Create elements and structure for the chat interface
-const chatContainer = document.createElement('div');
-chatContainer.classList.add('chat-container');
+// const chatContainer = document.createElement('div');
+//chatContainer.classList.add('chat-container');
+
+const chatContainer = document.getElementsByClassName('chat-container')[0]; 
+const fileInput = document.getElementById('fileInput');
+const sendFileButton = document.getElementById('sendFileButton');
+
 
 const messagesDiv = document.createElement('div');
 messagesDiv.classList.add('messages');
@@ -37,7 +42,7 @@ let newMessageCount = 0;
 const messageTitles = [];
 
 //static data to test only later dynamic in real clientside
-const limit = 6;
+const limit = 10;
 const conversationId = 1;
 const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNzAxMDA1MDI1LCJleHAiOjE3MDE2MDk4MjV9.h1vmIbsZMldW8dQOVN4jd9WmHYK3ct52AwwL7mcRI1s";
 const loggedInUserId = 8;
@@ -61,18 +66,28 @@ socket.on('newMessage', handleNewMessage);
 document.addEventListener('newMessageNotification', handleNewMessageNotification);
 badge.addEventListener('click', clearNotification);
 messagesDiv.addEventListener('scroll', handleScroll);
+sendFileButton.addEventListener('click', () => {
+  const file = fileInput.files[0];
+  if (file) {
+    uploadFile(file);
+  } else {
+    alert('Please select a file');
+  }
+});
+
 
 // Functions
 
 function sendMessage() {
   const messageInput = document.getElementById('messageInput');
   const messageContent = messageInput.value.trim();
-  socket.emit('sendMessage', {
+  if(messageContent !== '')
+ { socket.emit('sendMessage', {
     conversationId,
     sender: loggedInUserId,
     content: messageContent
   });
-  messageInput.value = '';
+  messageInput.value = '';}
 }
 
 async function handleNewMessage(message) {
@@ -157,7 +172,26 @@ async function fetchPreviousMessages(conversationId, limit, token, LastMsgID) {
   }
 }
 
+//file upload
 
+function uploadFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  axios.post(`${API_URL}/chat/uploadFile/${conversationId}`, formData, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+  .then(response => {
+    console.log('File uploaded:', response.data);
+   
+  })
+  .catch(error => {
+    console.error('Error uploading file:', error);
+  });
+}
   // Fetch and render initial latest messages
   fetchLatestMessages(conversationId, limit, token)
   .then(messages => {
@@ -189,13 +223,45 @@ function renderMessages(messages, chatMessages, loggedInUserId, prepend = false)
     const content = message.content || 'No content';
     messageDiv.textContent = `${senderName}: ${content}`;
 
-    if (!prepend) {
-      console.log('Appending new message:', message);
-      chatMessages.appendChild(messageDiv);
+    
+    if (content === 'file') {
+      const fileLink = document.createElement('a');
+      fileLink.href = `${API_URL}/chat/downloadFile/${message.fileName}`; // Update this URL to the correct download endpoint
+      fileLink.textContent = `File: ${message.fileName}`;
+      fileLink.setAttribute('download', message.fileName);
+      messageDiv.appendChild(fileLink);
+
+      fileLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        downloadFile(message.fileName);
+      });
+
     } else {
-      console.log('Insert new message:', message, prepend);
-      chatMessages.insertBefore(messageDiv, chatMessages.firstChild);
+      messageDiv.textContent = `${senderName}: ${content}`;
+    }
+
+    if (content !== 'file' || content !== 'No content') {
+      if (!prepend) {
+        chatMessages.appendChild(messageDiv);
+      } else {
+        chatMessages.insertBefore(messageDiv, chatMessages.firstChild);
+      }
     }
   });
 }
 
+async function downloadFile(filename) {
+  console.log(filename)
+  try {
+    const response = await axios.get(`${API_URL}/chat/downloadFile/${filename}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+   
+    return true;
+  } catch (error) {
+    console.log('Error fetching latest messages:', error);
+    return [];
+  }
+}

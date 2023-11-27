@@ -1,6 +1,7 @@
 const mongoose=require("mongoose");
 const JWT= require("jsonwebtoken");
 const { promisify } = require("util")
+const path = require('path');
 
 require("./../Models/ChatModel")
 require("./../Models/MessageModel")
@@ -83,7 +84,7 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
     const lastID = parseInt(req.query.lastID); 
 
     // query condition
-    const messageMatch = lastID ? { _id: { $lt: lastID } } : {};
+    const messageMatch = lastID ? { _id: { $lt: lastID }, content: { $ne: '' } } : { content: { $ne: '' } };
 
     const conversations = await Conversation.find({ _id: converID })
     .populate({
@@ -93,7 +94,7 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
         sort: { 'createdAt': -1 },
         limit: limit,
       },
-      select: 'content sender',
+      select: 'content sender fileName',
       populate: {
         path: 'sender',
         select: 'firstName',
@@ -101,7 +102,6 @@ exports.createConversation =  catchAsync(async (req,res,next)=>{
     })
     .exec();
 
-   // console.log(conversations[0].messages,"conversati")
     res.status(200).json(conversations)
   });
   
@@ -159,3 +159,42 @@ exports.joinRoom = catchAsync (async(req,res,next)=>{
         });
 
         
+exports.FileUpload = catchAsync (async(req,res,next)=>{
+  const conversationId = req.params.id
+
+      token = req.headers.authorization.split(' ')[1];
+      if(!token){
+      return next(new AppError('You\'re not logged in, please go to login page',401));
+      }
+      const decoded = await promisify(JWT.verify)(token,process.env.JWT_SECRET);
+
+      if(!(req.filename)){
+       res.status(400).json({message:"There's no file!"})
+       }
+
+      const message = await Message.create({conversationId:conversationId ,
+          sender : decoded.id,
+          fileName :  req.filename,
+          content : "file"
+         });
+          
+      await Conversation.findByIdAndUpdate(
+        conversationId,
+        { $push: { messages: message._id } },
+        { new: true }
+      );
+          res.status(200).json({message:"File Uploaded :)"})
+    });
+
+exports.FileDownload = catchAsync (async(req,res,next)=>{
+  console.log(req.params)
+      const fileName = req.params.fileName;
+      const filePath = path.join(__dirname, '..', "Core",'Files', fileName); 
+
+      res.download(filePath, (err) => {
+        if (err) {
+          console.error('Error downloading file:', err);
+          res.status(404).send('File not found');
+        }
+      });
+    })

@@ -6,7 +6,7 @@ const MessageSchema = new Schema({
   _id:Number,
   conversationId: { type: Number, ref: 'Conversation' },
   sender: { type: Number, ref: 'user' },
-  //receiver: { type: Number, ref: 'user' },
+  fileName: {type:String , default:"No file"},
   content: String,
 },{timestamps:true});
 
