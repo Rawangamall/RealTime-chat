@@ -39,11 +39,11 @@
 - **Twilio SMS Services:** Utilized for phone number verification and password recovery.
 - **JWT:** For secure creation token.
 
-- ##For Testing:
+ ##For Testing:
 - **Postman Documentation link:** [API Documentation](https://documenter.getpostman.com/view/26421829/2s9YeEcs9y)
 - **RealTime Testing:** Run the application twice with different ports, go live with the htmls pages and change the static data for each clientside page except socket url keep them identical.
 
-- ##Test Cases
+ ##Test Cases
 
 For comprehensive testing of the application, [Realtime test cases.xlsx](./Realtime%20test%20cases.xlsx) .
 
