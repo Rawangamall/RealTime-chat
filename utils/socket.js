@@ -25,10 +25,10 @@ io.on('connection', async (socket) => {
     }
     const decoded = await promisify(JWT.verify)(token,process.env.JWT_SECRET);
 
+    //change the user status to online
     axios.patch(`http://localhost:8080/user/changeStatus/${decoded.id}?status=online`).catch(error => {
     console.error('Error updating status:', error);
   });
-  //console.log(response,'A user connected')
 
   socket.on('joinRoom', (conversationId) => {
     socket.join(conversationId);
@@ -49,6 +49,7 @@ io.on('connection', async (socket) => {
 
   // Handle disconnect
   socket.on('disconnect', async () => {
+    //change the user status to offline
    axios.patch(`http://localhost:8080/user/changeStatus/${decoded.id}?status=offline`).catch(error => {
     console.error('Error updating status:', error);
   });

@@ -16,7 +16,7 @@ exports.register = catchAsync(async (req,res,next)=>{
 
 
     const {firstName,lastName,image} = req.body;
-    const phone = "+2" + req.body.phone
+    const phone = req.body.phone
     const hash = await bcrypt.hash(req.body.password, salt);
 
     const user = new UserSchema({
@@ -79,7 +79,9 @@ exports.phoneVerify =  catchAsync(async (req,res,next)=>{
 
     const verify = await TwilioService.verifyUser(user.phone , otp)
     if(!verify){
-    return next(new AppError("invalid otp code"),400);
+
+  res.status(400).json({ message: "invalid otp code" });
+
     }
 
     user.phone_verification = true

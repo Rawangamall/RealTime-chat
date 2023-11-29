@@ -44,8 +44,8 @@ const messageTitles = [];
 //static data to test only later dynamic in real clientside
 const limit = 10;
 const conversationId = 1;
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNzAxMDA1MDI1LCJleHAiOjE3MDE2MDk4MjV9.h1vmIbsZMldW8dQOVN4jd9WmHYK3ct52AwwL7mcRI1s";
-const loggedInUserId = 8;
+const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNzAxMjkxNDM3LCJleHAiOjE3MDE4OTYyMzd9.ehD9vE0Vf2fCzfIXy6pVM4KxEsDc4JwgUEKFAKtn5LE";
+const loggedInUserId = 1;
 let LastMsgID = 1;
 
 // Connect to the Socket.IO server
@@ -81,13 +81,12 @@ sendFileButton.addEventListener('click', () => {
 function sendMessage() {
   const messageInput = document.getElementById('messageInput');
   const messageContent = messageInput.value.trim();
-  if(messageContent !== '')
- { socket.emit('sendMessage', {
+ socket.emit('sendMessage', {
     conversationId,
     sender: loggedInUserId,
     content: messageContent
   });
-  messageInput.value = '';}
+  messageInput.value = '';
 }
 
 async function handleNewMessage(message) {
@@ -99,6 +98,7 @@ async function handleNewMessage(message) {
 
   const senderName = response.data.firstName || 'Unknown';
   message.senderName = senderName;
+  console.log("in handle new messages")
   renderMessages([message], chatMessages, loggedInUserId, false);
 
   if (message.sender !== loggedInUserId) {
@@ -222,7 +222,7 @@ function renderMessages(messages, chatMessages, loggedInUserId, prepend = false)
     const senderName = message.sender.firstName || message.senderName;
     const content = message.content || 'No content';
     messageDiv.textContent = `${senderName}: ${content}`;
-
+console.log(messageDiv.textContent)
     
     if (content === 'file') {
       const fileLink = document.createElement('a');
@@ -236,11 +236,9 @@ function renderMessages(messages, chatMessages, loggedInUserId, prepend = false)
         downloadFile(message.fileName);
       });
 
-    } else {
-      messageDiv.textContent = `${senderName}: ${content}`;
     }
 
-    if (content !== 'file' || content !== 'No content') {
+    if (content != 'file' || content != 'No content') {
       if (!prepend) {
         chatMessages.appendChild(messageDiv);
       } else {

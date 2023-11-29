@@ -7,8 +7,13 @@ const UserSchema = mongoose.model("user");
 exports.UserValidPOST = [
   body("firstName").isString().withMessage("fisrt name should string"),
   body("lastName").isString().withMessage("last name should string"),
-  body('phone').isString().withMessage('Should be a valid phone format').custom(async (value) => {
-    const user = await UserSchema.findOne({ phoneNumber: "+2"+value });
+  body('phone').isString().withMessage('Should be a valid phone format').custom((value) => {
+    if (!value.startsWith('+20')) {
+      throw new Error('Phone number should start with +20');
+    }
+    return true;
+  }).custom(async (value) => {
+    const user = await UserSchema.findOne({ phoneNumber: value });
 
     if (user) {
       throw new Error('phoneNumber is already exist');

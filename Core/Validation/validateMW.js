@@ -7,9 +7,9 @@ module.exports = (request, response, next) => {
             (current, error) => current + error.msg + " , ",
             ""
         );
-        const error = new Error(errorMsg);
-        error.status = 422; 
-        next(error);
+
+        return response.status(422).json({ error: errorMsg });
+
     } else {
         next();
     }
