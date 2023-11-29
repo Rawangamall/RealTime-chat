@@ -25,7 +25,7 @@
 
 ### User Status
 
-- **Online/Offline Status:** Display the current online or offline status of users within the chat.
+- **Online/Offline Status:** Display the current online or offline status of users.
 - **Notification System:** Users receive notifications for new messages.
 
 ### File Sharing
